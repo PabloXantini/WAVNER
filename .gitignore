@@ -1,3 +1,2 @@
 assets/
-core/vision/__pycache__
-core/interfaces/__pycache__
+__pycache__/
