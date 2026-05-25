@@ -18,11 +18,12 @@ def main():
     synth = SyntethizerController()
     
     # Load accompaniment sounds as background channels
-    ch1 = audio.load_sound("assets/samples/1.mp3", loop=True)
-    ch2 = audio.load_sound("assets/samples/2.mp3", loop=True)
+    ch1 = audio.load_sound("assets/samples/s1.mp3", loop=True)
+    ch2 = audio.load_sound("assets/samples/s2.mp3", loop=True)
     
     # Initialize main real-time modulated synthesizer instrument
-    synth_inst = OscillatorChannel(sample_rate=audio.sample_rate, waveform_type='sine')
+    synth_inst = audio.load_sound("assets/samples/main.mp3", loop=True)
+    # OscillatorChannel(sample_rate=audio.sample_rate, waveform_type='sine')
     with audio._lock:
         audio.channels_list.append(synth_inst)
         

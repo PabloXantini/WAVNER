@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch WAVNER (Camera View)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/wavner.py",
+            "console": "integratedTerminal",
+            "args": ["--show-camera"]
+        },
+        {
+            "name": "Launch WAVNER",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/wavner.py",
+            "console": "integratedTerminal",
+        }
+    ]
+}

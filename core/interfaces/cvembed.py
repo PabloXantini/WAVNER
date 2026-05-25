@@ -89,6 +89,9 @@ class HandSynthetizer(Controller):
                 # --- 2. Left Hand: Master Volume, Effects & Gating ---
                 # Master volume scale is controlled by Left Hand height
                 master_vol = gestures['height']
+                self.master_volume = master_vol
+                
+                self.synth_controller.mix_channel("synth_inst", volume=master_vol)
                 
                 # Reverb controlled by thumb extension applied to synth_inst
                 self.synth_controller.set_effects("synth_inst", reverb=gestures['reverb_ext'])
@@ -96,9 +99,9 @@ class HandSynthetizer(Controller):
                 # Distortion drive controlled by index extension applied to synth_inst
                 self.synth_controller.set_effects("synth_inst", distortion=gestures['distortion_ext'])
                 
-                # Gate Channel 1 and 2 (accompaniment songs) volumes scaled by master volume
-                ch1_vol = gestures['ch1_gating'] * master_vol
-                ch2_vol = gestures['ch2_gating'] * master_vol
+                # Gate Channel 1 and 2 (accompaniment songs) volumes must be absolute
+                ch1_vol = gestures['ch1_gating']
+                ch2_vol = gestures['ch2_gating']
                 
                 self.synth_controller.mix_channel("ch1", volume=ch1_vol)
                 self.synth_controller.mix_channel("ch2", volume=ch2_vol)
@@ -142,17 +145,14 @@ class HandSynthetizer(Controller):
             if hasattr(ch2, 'volume'):
                 ch2_vol = ch2.volume
                 
-        # Normalize individual gate percentages relative to master volume
-        master_scale = self.master_volume if self.master_volume > 0 else 1.0
-        
         synth_state = {
             'hands_data': self.hands_data,
             'lowpass': lp_cutoff,
             'highpass': hp_cutoff,
             'ch1_freq': ch1_freq,
             'master_volume': self.master_volume,
-            'ch1_gate': min(1.0, ch1_vol / master_scale),
-            'ch2_gate': min(1.0, ch2_vol / master_scale),
+            'ch1_gate': min(1.0, ch1_vol),
+            'ch2_gate': min(1.0, ch2_vol),
             'ch1_wave': self.ch1_wave,
             'ch2_wave': self.ch2_wave,
             'debug': self.debug
