@@ -38,8 +38,8 @@ class TelemetryHUD(BaseVisualizer):
             if len(landmarks) < 21:
                 continue
             
-            # Get wrist (0) position in pixels (horizontally mirrored!)
-            wrist_x = int((1.0 - landmarks[0].x) * w)
+            # Get wrist (0) position in pixels (already mirrored!)
+            wrist_x = int(landmarks[0].x * w)
             wrist_y = int(landmarks[0].y * h)
             
             # Neon HUD colors: Cyan for Left hand (effects/vol), Pink for Right hand (pitch/filters)
@@ -53,12 +53,12 @@ class TelemetryHUD(BaseVisualizer):
             cv.putText(image, f"{label.upper()} HAND", (wrist_x - 45, wrist_y - 45), 
                        cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2, cv.LINE_AA)
                        
-            # Draw finger connection lines with values (horizontally mirrored!)
+            # Draw finger connection lines with values (already mirrored!)
             if label == 'Right':
                 # Lowpass pinch line (Thumb 4 to Index 8)
-                t_x = int((1.0 - landmarks[4].x) * w)
+                t_x = int(landmarks[4].x * w)
                 t_y = int(landmarks[4].y * h)
-                i_x = int((1.0 - landmarks[8].x) * w)
+                i_x = int(landmarks[8].x * w)
                 i_y = int(landmarks[8].y * h)
                 
                 cv.line(image, (t_x, t_y), (i_x, i_y), (0, 255, 0), 2, cv.LINE_AA)
@@ -67,9 +67,9 @@ class TelemetryHUD(BaseVisualizer):
                            cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1, cv.LINE_AA)
                 
                 # Highpass pinch line (Middle/Ring mid to Pinky 20)
-                mr_x = int((1.0 - (landmarks[12].x + landmarks[16].x) / 2.0) * w)
+                mr_x = int(((landmarks[12].x + landmarks[16].x) / 2.0) * w)
                 mr_y = int(((landmarks[12].y + landmarks[16].y) / 2.0) * h)
-                p_x = int((1.0 - landmarks[20].x) * w)
+                p_x = int(landmarks[20].x * w)
                 p_y = int(landmarks[20].y * h)
                 
                 cv.line(image, (mr_x, mr_y), (p_x, p_y), (0, 100, 255), 2, cv.LINE_AA)
@@ -113,12 +113,12 @@ class SkeletonVisualizer(BaseVisualizer):
                 
             color = (255, 255, 0) if label == 'Left' else (255, 0, 255)
             
-            # 1. Draw glowing bones manually (mirrored)
+            # 1. Draw glowing bones manually (already mirrored)
             for conn in connections:
                 p1, p2 = conn
-                x1 = int((1.0 - landmarks[p1].x) * w)
+                x1 = int(landmarks[p1].x * w)
                 y1 = int(landmarks[p1].y * h)
-                x2 = int((1.0 - landmarks[p2].x) * w)
+                x2 = int(landmarks[p2].x * w)
                 y2 = int(landmarks[p2].y * h)
                 
                 # Draw thick background glow
@@ -128,7 +128,7 @@ class SkeletonVisualizer(BaseVisualizer):
                 
             # 2. Draw glowing knuckle joint nodes
             for lm in landmarks:
-                x = int((1.0 - lm.x) * w)
+                x = int(lm.x * w)
                 y = int(lm.y * h)
                 cv.circle(image, (x, y), 5, (255, 255, 255), -1, cv.LINE_AA)
                 cv.circle(image, (x, y), 7, color, 1, cv.LINE_AA)

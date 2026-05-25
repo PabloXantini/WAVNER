@@ -59,13 +59,13 @@ class VisionProcessor:
         # 3. Draw the sci-fi HUD and dynamic music visualizers
         if hasattr(self.hdetector.c, 'draw_visuals'):
             if self.show_camera:
-                self.hdetector.c.draw_visuals(frame)
+                self.hdetector.c.draw_visuals(img_display)
             else:
                 self.hdetector.c.draw_visuals(image=None)
             
         # 4. Display the mirrored camera feed only if show_camera is enabled
         if self.show_camera:
-            cv.imshow('HandTracking', frame)
+            cv.imshow('HandTracking', img_display)
         
         # 5. Handle Keyboard Inputs (waitKey(1) must always run to refresh OpenCV visualizer windows)
         key = cv.waitKey(1) & 0xFF
