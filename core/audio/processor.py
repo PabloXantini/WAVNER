@@ -3,8 +3,9 @@ import numpy as np
 import librosa
 import threading
 import time
+from .dsp import DSPChannel
 
-class AudioChannel:
+class AudioChannel(DSPChannel):
     def __init__(self, data, sample_rate, loop=False):
         """
         data: numpy array of shape (channels, samples) normalized to [-1, 1]
@@ -16,6 +17,9 @@ class AudioChannel:
         self.is_playing = False
         self.volume = 1.0
         self._lock = threading.RLock()
+
+        # Initialize shared DSP state (filters, reverb, distortion)
+        self._init_dsp(sample_rate)
 
     def play(self):
         with self._lock:
@@ -33,6 +37,36 @@ class AudioChannel:
     def set_volume(self, volume):
         with self._lock:
             self.volume = max(0.0, min(1.0, volume))
+
+    def generate_audio(self, frame_count):
+        """
+        Returns the next (frame_count, 2) float32 block from the sample buffer
+        with the full DSP chain applied (filters + reverb + distortion).
+        Called by AudioEngine._callback — must NOT acquire self._lock (already held).
+        """
+        if not self.is_playing:
+            return np.zeros((frame_count, 2), dtype=np.float32)
+
+        out = np.zeros((frame_count, 2), dtype=np.float32)
+        remaining = self.data.shape[1] - self.position
+        take = min(frame_count, remaining)
+
+        # Read sample data into output buffer
+        chunk = self.data[:, self.position : self.position + take].T
+        out[:take] = chunk
+
+        self.position += take
+
+        # Handle looping or stopping at end of sample
+        if self.position >= self.data.shape[1]:
+            if self.loop:
+                self.position = 0
+            else:
+                self.is_playing = False
+                self.position = 0
+
+        return self._apply_dsp(out, frame_count)
+
 
 class AudioEngine:
     def __init__(self, sample_rate=44100, channels=2):
@@ -63,19 +97,20 @@ class AudioEngine:
                 
                 for channel in active_channels:
                     with channel._lock:
-                        if hasattr(channel, 'generate_audio'):
+                        if callable(getattr(channel, 'generate_audio', None)):
                             chunk = channel.generate_audio(frame_count)
                             out_data += chunk * channel.volume
                         else:
+                            # Fallback: raw buffer read for channels without generate_audio (no DSP)
                             remaining = channel.data.shape[1] - channel.position
                             take = min(frame_count, remaining)
-                            
+
                             # Mix in the data
                             chunk = channel.data[:, channel.position : channel.position + take].T
                             out_data[:take] += chunk * channel.volume
-                            
+
                             channel.position += take
-                            
+
                             # Handle looping or stopping
                             if channel.position >= channel.data.shape[1]:
                                 if channel.loop:

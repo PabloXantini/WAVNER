@@ -5,6 +5,7 @@ from core.interfaces.cvembed import HandSynthetizer
 from core.audio.processor import AudioEngine
 from core.audio.syntethizer import SyntethizerController
 from core.audio.oscillator import OscillatorChannel
+from core.interfaces.input import KeyboardController
 
 def main():
     # Parse CLI Arguments
@@ -23,10 +24,7 @@ def main():
     
     # Initialize main real-time modulated synthesizer instrument
     synth_inst = audio.load_sound("assets/samples/main.mp3", loop=True)
-    # OscillatorChannel(sample_rate=audio.sample_rate, waveform_type='sine')
-    with audio._lock:
-        audio.channels_list.append(synth_inst)
-        
+
     synth.add_channel("ch1", ch1)
     synth.add_channel("ch2", ch2)
     synth.add_channel("synth_inst", synth_inst)
@@ -46,7 +44,8 @@ def main():
     # CV System with injected dependencies
     cam = Camera(1280, 720)
     handler = HandSynthetizer(synth_controller=synth, audio_engine=audio, debug=True)
-    vision = VisionProcessor(camera=cam, controller=handler, debug=True, show_camera=args.show_camera)
+    input_ctrl = KeyboardController(handler=handler, camera=cam, sample_rate=audio.sample_rate)
+    vision = VisionProcessor(camera=cam, controller=handler, debug=True, show_camera=args.show_camera, input_controller=input_ctrl)
     
     print("Application running. Starting separate premium 'AudioVisualizer' window.")
     if args.show_camera:
