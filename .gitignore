@@ -1,2 +1,7 @@
-assets/
 __pycache__/
+# Audio Samples
+assets/samples/
+*.mp3
+*.wav
+*.ogg
+*.flac

@@ -3,6 +3,8 @@
 ## Description
 WAVNER is an interactive, computer-vision-based audio synthesizer. It acts as a "Theremin-like" instrument that allows users to modulate audio signals, control volume, and apply effects in real time using hand gestures captured by a webcam. The project leverages MediaPipe for robust hand tracking and PyAudio for real-time audio processing.
 
+![WAVNER_DEMO](assets/img/wavner.gif)
+
 ## Features
 - Real-time hand tracking and gesture recognition via webcam.
 - Dynamic waveform generation: Sine, Square, Triangle, and Sawtooth.
