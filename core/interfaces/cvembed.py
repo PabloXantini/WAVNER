@@ -1,4 +1,4 @@
-from ..vision.controller import Controller
+from ..vision.controller import Controller, WaveformController
 from ..vision.gesture import GestureRecognizer
 from .visualizer import (
     MusicReactiveShapeVisualizer, 
@@ -9,7 +9,7 @@ from .visualizer import (
 )
 import numpy as np
 
-class HandSynthetizer(Controller):
+class HandSynthetizer(Controller, WaveformController):
     # Glue controller that maps detected hand gesture landmarks to real-time 
     # synthesizer parameters and coordinates the beautiful visualizer overlays.
     # Supports a separate aesthetic visualizer window and a camera debug view.
@@ -42,6 +42,9 @@ class HandSynthetizer(Controller):
         self.master_volume = 0.5
         self.ch1_wave = 'sine'
         self.ch2_wave = 'square' # Set default wave shapes
+        self.lp_cutoff = 20000.0
+        self.hp_cutoff = 20.0
+        self.ch1_freq = 440.0
 
     def clear_hands_data(self):
         self.hands_data = []
@@ -73,17 +76,18 @@ class HandSynthetizer(Controller):
                 # --- 1. Right Hand: Pitch & Filters ---
                 # Map height exponentially [100Hz, 1200Hz] for natural musical scale
                 freq = 100.0 * (1200.0 / 100.0) ** gestures['height']
+                self.ch1_freq = freq
                 self.synth_controller.set_frequency("synth_inst", freq)
                 
                 # Lowpass filter: index finger controls cutoff frequency, thumb controls intensity
-                lp_cutoff = 50.0 + 19950.0 * gestures['lp_freq']
+                self.lp_cutoff = 20.0 + 19980.0 * gestures['lp_freq']
                 lp_intensity = gestures['lp_intensity']
-                self.synth_controller.set_filters("synth_inst", lowpass=lp_cutoff, lp_intensity=lp_intensity)
+                self.synth_controller.set_filters("synth_inst", lowpass=self.lp_cutoff, lp_intensity=lp_intensity)
                 
                 # Highpass filter: middle/ring average controls cutoff frequency, pinky controls intensity
-                hp_cutoff = 4500.0 * gestures['hp_freq']
+                self.hp_cutoff = 20.0 + 19980.0 * gestures['hp_freq']
                 hp_intensity = gestures['hp_intensity']
-                self.synth_controller.set_filters("synth_inst", highpass=hp_cutoff, hp_intensity=hp_intensity)
+                self.synth_controller.set_filters("synth_inst", highpass=self.hp_cutoff, hp_intensity=hp_intensity)
                 
             else:
                 # --- 2. Left Hand: Master Volume, Effects & Gating ---
@@ -123,27 +127,17 @@ class HandSynthetizer(Controller):
             audio_data = self.audio_engine.latest_block
             
         # Fetch current active parameters to supply to visualizers
-        lp_cutoff = 20000.0
-        hp_cutoff = 0.0
-        ch1_freq = 440.0
+        lp_cutoff = getattr(self, 'lp_cutoff', 20000.0)
+        hp_cutoff = getattr(self, 'hp_cutoff', 20.0)
+        ch1_freq = getattr(self, 'ch1_freq', 440.0)
         ch1_vol = 0.0
         ch2_vol = 0.0
-        
+                
         if 'ch1' in self.synth_controller.channels:
-            ch1 = self.synth_controller.channels['ch1']
-            if hasattr(ch1, 'lowpass_cutoff'):
-                lp_cutoff = ch1.lowpass_cutoff
-            if hasattr(ch1, 'highpass_cutoff'):
-                hp_cutoff = ch1.highpass_cutoff
-            if hasattr(ch1, 'frequency'):
-                ch1_freq = ch1.frequency
-            if hasattr(ch1, 'volume'):
-                ch1_vol = ch1.volume
+            ch1_vol = self.synth_controller.channels['ch1'].volume
                 
         if 'ch2' in self.synth_controller.channels:
-            ch2 = self.synth_controller.channels['ch2']
-            if hasattr(ch2, 'volume'):
-                ch2_vol = ch2.volume
+            ch2_vol = self.synth_controller.channels['ch2'].volume
                 
         synth_state = {
             'hands_data': self.hands_data,

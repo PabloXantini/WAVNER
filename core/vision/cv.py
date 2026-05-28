@@ -18,8 +18,7 @@ class HandDetector:
             return False
             
         # Reset current frame's tracked hands accumulator
-        if hasattr(self.c, 'clear_hands_data'):
-            self.c.clear_hands_data()
+        self.c.clear_hands_data()
             
         if not results.multi_hand_landmarks:
             return False
@@ -42,11 +41,12 @@ class HandDetector:
         return True
 
 class VisionProcessor:
-    def __init__(self, camera:Camera, controller, debug:bool=False, show_camera:bool=False):
+    def __init__(self, camera:Camera, controller, debug:bool=False, show_camera:bool=False, input_controller=None):
         self.debug = debug
         self.show_camera = show_camera
         self.cam = camera
         self.hdetector = HandDetector(controller, 2, debug)
+        self.input_controller = input_controller
 
     def process(self):
         frame = self.cam.capture()
@@ -57,11 +57,10 @@ class VisionProcessor:
         self.hdetector.detect(image_rgb)
         
         # 3. Draw the sci-fi HUD and dynamic music visualizers
-        if hasattr(self.hdetector.c, 'draw_visuals'):
-            if self.show_camera:
-                self.hdetector.c.draw_visuals(img_display)
-            else:
-                self.hdetector.c.draw_visuals(image=None)
+        if self.show_camera:
+            self.hdetector.c.draw_visuals(img_display)
+        else:
+            self.hdetector.c.draw_visuals(image=None)
             
         # 4. Display the mirrored camera feed only if show_camera is enabled
         if self.show_camera:
@@ -69,13 +68,14 @@ class VisionProcessor:
         
         # 5. Handle Keyboard Inputs (waitKey(1) must always run to refresh OpenCV visualizer windows)
         key = cv.waitKey(1) & 0xFF
-        if key in [ord('1'), ord('2'), ord('3'), ord('4')]:
-            wave_map = {ord('1'): 'sine', ord('2'): 'square', ord('3'): 'triangle', ord('4'): 'saw'}
-            wave_type = wave_map[key]
-            if hasattr(self.hdetector.c, 'change_waveform'):
-                self.hdetector.c.change_waveform(wave_type)
-        elif key == 27:  # ESC to exit
-            self.cam.work = False
+        if self.input_controller:
+            self.input_controller.process_input(key)
+        else:
+            if key in [ord('1'), ord('2'), ord('3'), ord('4')]:
+                wave_map = {ord('1'): 'sine', ord('2'): 'square', ord('3'): 'triangle', ord('4'): 'saw'}
+                self.hdetector.c.change_waveform(wave_map[key])
+            elif key == 27:  # ESC to exit
+                self.cam.work = False
 
     def close(self):
         cv.destroyAllWindows()
