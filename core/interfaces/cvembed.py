@@ -64,7 +64,11 @@ class HandSynthetizer(Controller, WaveformController):
                 
             # Analyze hand shapes modularly
             gestures = self.gesture_recognizer.analyze(landmarks_list, handedness)
-            
+
+            # Hand has exited camera total bounds — skip modulation for this frame
+            if gestures.get('out_of_bounds'):
+                return
+
             # Record telemetry for HUD visualization (saving the standard list)
             self.hands_data.append({
                 'label': handedness,
@@ -74,8 +78,9 @@ class HandSynthetizer(Controller, WaveformController):
             # Route parameters based on hand assignment
             if handedness == 'Right':
                 # --- 1. Right Hand: Pitch & Filters ---
-                # Map height exponentially [100Hz, 1200Hz] for natural musical scale
-                freq = 100.0 * (1200.0 / 100.0) ** gestures['height']
+                # Map height exponentially [110Hz, 1760Hz] (A2 to A6). 
+                # This ensures the center (0.5) is exactly 440Hz (normal sample playback speed).
+                freq = 110.0 * (1760.0 / 110.0) ** gestures['height']
                 self.ch1_freq = freq
                 self.synth_controller.set_frequency("synth_inst", freq)
                 

@@ -44,7 +44,14 @@ def main():
     # CV System with injected dependencies
     cam = Camera(1280, 720)
     handler = HandSynthetizer(synth_controller=synth, audio_engine=audio, debug=True)
-    input_ctrl = KeyboardController(handler=handler, camera=cam, sample_rate=audio.sample_rate)
+    input_ctrl = KeyboardController(
+        handler=handler,
+        camera=cam,
+        synth_controller=synth,
+        sample_inst=synth_inst,
+        audio_engine=audio,
+        sample_rate=audio.sample_rate
+    )
     vision = VisionProcessor(camera=cam, controller=handler, debug=True, show_camera=args.show_camera, input_controller=input_ctrl)
     
     print("Application running. Starting separate premium 'AudioVisualizer' window.")
