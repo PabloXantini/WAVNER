@@ -211,6 +211,7 @@ class MusicReactiveShapeVisualizer(BaseVisualizer):
         self.particles = []
         # Pulse angle for animations
         self.angle = 0.0
+        self.beat_pulse = 0.0
 
     def draw(self, image, audio_data, synth_state: dict):
         h, w, _ = image.shape
@@ -226,16 +227,26 @@ class MusicReactiveShapeVisualizer(BaseVisualizer):
         # Peak scale based on loudness
         rms_scale = min(1.0, rms * 4.0) # Scale RMS value for nice responsiveness
         
-        # Pitch color mapping (using frequency to map to HSV space)
-        freq = synth_state.get('ch1_freq', 440.0)
-        # Map 100Hz-1200Hz to Hue 0-179
-        hue = int(((freq - 100.0) / 1100.0) * 179)
-        hue = max(0, min(179, hue))
+        # Simple Beat detection
+        if rms > 0.15:
+            self.beat_pulse = min(1.0, self.beat_pulse + 0.4)
+        self.beat_pulse *= 0.85
+        
+        rms_scale = min(1.0, rms_scale + self.beat_pulse * 0.6)
+        
+        # Rainbow color object with reactiveness
+        base_hue = int((self.angle * 180 / np.pi)) % 180
+        hue = (base_hue + int(self.beat_pulse * 60)) % 180
         
         # Convert HSV to BGR color for CV
         hsv_color = np.uint8([[[hue, 255, 255]]])
         bgr_color = cv.cvtColor(hsv_color, cv.COLOR_HSV2BGR)[0, 0]
         color_bgr = (int(bgr_color[0]), int(bgr_color[1]), int(bgr_color[2]))
+        
+        # Apply pulse on background
+        if self.beat_pulse > 0.05:
+            bg_overlay = np.full_like(image, color_bgr)
+            cv.addWeighted(image, 1.0, bg_overlay, self.beat_pulse * 0.25, 0, image)
         
         # 2. Draw Central Music-Reactive Ring
         center_x, center_y = w // 2, h // 2
