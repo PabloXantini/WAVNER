@@ -71,7 +71,7 @@ class KeyboardController(InputController):
             # Transfer state from the current instrument to the new one
             if current_inst and next_inst and current_inst is not next_inst:
                 next_inst.set_volume(current_inst.volume)
-                if hasattr(current_inst, 'frequency') and callable(getattr(next_inst, 'set_frequency', None)):
+                if getattr(current_inst, 'frequency', None) is not None and callable(getattr(next_inst, 'set_frequency', None)):
                     next_inst.set_frequency(current_inst.frequency)
                 
                 # Copy filter state

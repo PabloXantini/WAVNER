@@ -54,7 +54,7 @@ class HandSynthetizer(Controller, WaveformController):
         # the active synthesis channels. Wraps core updates in a resilient 
         # try...except block to diagnose any unexpected desynchronization issues.
         try:
-            if hand is None or not hasattr(hand, 'landmark'):
+            if hand is None or getattr(hand, 'landmark', None) is None:
                 return
                 
             # CAST TO STANDARD PYTHON LIST to prevent protobuf desynchronization/indexing blocking errors
@@ -72,7 +72,8 @@ class HandSynthetizer(Controller, WaveformController):
             # Record telemetry for HUD visualization (saving the standard list)
             self.hands_data.append({
                 'label': handedness,
-                'landmarks': landmarks_list
+                'landmarks': landmarks_list,
+                'metrics': gestures if self.debug else None
             })
             
             # Route parameters based on hand assignment
@@ -161,6 +162,11 @@ class HandSynthetizer(Controller, WaveformController):
         vis_canvas = np.zeros((720, 1280, 3), dtype=np.uint8)
         for vis in self.canvas_visualizers:
             vis.draw(vis_canvas, audio_data, synth_state)
+            
+        # If in debug mode, also draw the debug/skeleton visualizers on the main canvas
+        if self.debug:
+            for vis in self.debug_visualizers:
+                vis.draw(vis_canvas, audio_data, synth_state)
             
         import cv2 as cv
         cv.imshow('AudioVisualizer', vis_canvas)

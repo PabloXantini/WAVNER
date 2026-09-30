@@ -27,10 +27,10 @@ class HandDetector:
             # Default to Right if handedness cannot be queried
             handedness = 'Right'
             try:
-                if hasattr(results, 'multi_handedness') and results.multi_handedness is not None:
+                if getattr(results, 'multi_handedness', None) is not None:
                     for h_idx, h_data in enumerate(results.multi_handedness):
                         if h_idx == idx:
-                            if hasattr(h_data, 'classification') and h_data.classification:
+                            if getattr(h_data, 'classification', None):
                                 handedness = h_data.classification[0].label
                             break
             except Exception as e:
