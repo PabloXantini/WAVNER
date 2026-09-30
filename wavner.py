@@ -11,7 +11,12 @@ def main():
     # Parse CLI Arguments
     parser = argparse.ArgumentParser(description="WAVNER Interactive Synthesizer")
     parser.add_argument('--show-camera', action='store_true', help="Show webcam feed with hand tracking debug skeleton and metrics.")
+    parser.add_argument('--debug', action='store_true', help="Enable debug mode.")
     args = parser.parse_args()
+
+    if args.show_camera and not args.debug:
+        print("Note: --show-camera requires --debug mode to be enabled.")
+        args.show_camera = False
 
     # Audio System Base
     audio = AudioEngine()
@@ -43,7 +48,7 @@ def main():
 
     # CV System with injected dependencies
     cam = Camera(1280, 720)
-    handler = HandSynthetizer(synth_controller=synth, audio_engine=audio, debug=True)
+    handler = HandSynthetizer(synth_controller=synth, audio_engine=audio, debug=args.debug)
     input_ctrl = KeyboardController(
         handler=handler,
         camera=cam,
@@ -52,7 +57,7 @@ def main():
         audio_engine=audio,
         sample_rate=audio.sample_rate
     )
-    vision = VisionProcessor(camera=cam, controller=handler, debug=True, show_camera=args.show_camera, input_controller=input_ctrl)
+    vision = VisionProcessor(camera=cam, controller=handler, debug=args.debug, show_camera=args.show_camera, input_controller=input_ctrl)
     
     print("Application running. Starting separate premium 'AudioVisualizer' window.")
     if args.show_camera:

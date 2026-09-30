@@ -87,6 +87,14 @@ class TelemetryHUD(BaseVisualizer):
                 cv.putText(image, f"CH1: {int(ch1_gate*100)}% | CH2: {int(ch2_gate*100)}%", (wrist_x - 65, wrist_y + 75), 
                            cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 100), 1, cv.LINE_AA)
 
+            # Display raw metrics in debug mode
+            if synth_state.get('debug', False) and hand.get('metrics'):
+                y_offset = wrist_y + 95 if label == 'Left' else wrist_y + 35
+                for i, (k, v) in enumerate(hand['metrics'].items()):
+                    text = f"{k}: {v:.2f}" if isinstance(v, float) else f"{k}: {v}"
+                    cv.putText(image, text, (wrist_x - 45, y_offset + (i * 15)), 
+                               cv.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv.LINE_AA)
+
 class SkeletonVisualizer(BaseVisualizer):
     # Draws a stunning, custom-designed glowing futuristic hand skeleton on the mirrored camera frame.
     # Connects key joints and outlines the hand in premium neon cyan and magenta colors.

@@ -5,12 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch WAVNER (Camera View)",
+            "name": "Launch WAVNER (Debug Mode, Camera View)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/wavner.py",
             "console": "integratedTerminal",
-            "args": ["--show-camera"]
+            "args": ["--debug", "--show-camera"]
+        },
+        {
+            "name": "Launch WAVNER (Debug Mode)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/wavner.py",
+            "console": "integratedTerminal",
+            "args": ["--debug"]
         },
         {
             "name": "Launch WAVNER",
