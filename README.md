@@ -40,6 +40,8 @@ To enable the camera preview window for debugging hand tracking and visual metri
 python wavner.py --show-camera
 ```
 
-### Controls
-- Hand Gestures: Use your left and right hands to modulate the sound, apply effects, and control volume.
-- Keyboard: Use keys `1`, `2`, `3`, and `4` to switch the active waveform types dynamically during runtime.
+### More details
+You can find more details in these following usages guides
+
+* [WANVER (ES)]()
+* [WAVNER (EN)]()
